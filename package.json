@@ -1,0 +1,77 @@
+{
+  "$schema": "https://www.raycast.com/schemas/extension.json",
+  "name": "worklog-timer",
+  "title": "Worklog Timer",
+  "description": "Start, pause, and stop a session timer. On stop, write a journal entry appended to a markdown worklog file.",
+  "icon": "icon.png",
+  "author": "abhimanyu",
+  "license": "MIT",
+  "commands": [
+    {
+      "name": "timer-menu-bar",
+      "title": "Worklog Timer",
+      "subtitle": "Menu bar",
+      "description": "Menu bar timer with Start/Pause/Resume/Stop.",
+      "mode": "menu-bar",
+      "interval": "1m"
+    },
+    {
+      "name": "start-timer",
+      "title": "Start Timer",
+      "description": "Start the worklog timer.",
+      "mode": "no-view"
+    },
+    {
+      "name": "pause-timer",
+      "title": "Pause Timer",
+      "description": "Pause the running worklog timer.",
+      "mode": "no-view"
+    },
+    {
+      "name": "resume-timer",
+      "title": "Resume Timer",
+      "description": "Resume the paused worklog timer.",
+      "mode": "no-view"
+    },
+    {
+      "name": "stop-timer",
+      "title": "Stop Timer",
+      "description": "Stop the timer and open the journal entry form.",
+      "mode": "no-view"
+    },
+    {
+      "name": "log-entry",
+      "title": "Log Entry",
+      "description": "Write a journal entry for the just-completed session.",
+      "mode": "view"
+    }
+  ],
+  "preferences": [
+    {
+      "name": "worklogFile",
+      "title": "Worklog File",
+      "description": "Path to the markdown file where entries are appended. Supports ~.",
+      "type": "textfield",
+      "required": false,
+      "default": "~/worklog.md"
+    }
+  ],
+  "dependencies": {
+    "@raycast/api": "^1.83.0",
+    "@raycast/utils": "^1.17.0"
+  },
+  "devDependencies": {
+    "@raycast/eslint-config": "^1.0.11",
+    "@types/node": "^20.11.0",
+    "@types/react": "19.0.10",
+    "eslint": "^8.57.0",
+    "prettier": "^3.2.5",
+    "typescript": "^5.3.3"
+  },
+  "scripts": {
+    "build": "ray build -e dist",
+    "dev": "ray develop",
+    "fix-lint": "ray lint --fix",
+    "lint": "ray lint"
+  }
+}
