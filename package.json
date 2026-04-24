@@ -44,6 +44,12 @@
       "title": "Log Entry",
       "description": "Write a journal entry for the just-completed session.",
       "mode": "view"
+    },
+    {
+      "name": "view-worklog",
+      "title": "View Worklog",
+      "description": "Open the worklog HTML page in the default browser.",
+      "mode": "no-view"
     }
   ],
   "preferences": [
@@ -53,12 +59,13 @@
       "description": "Path to the markdown file where entries are appended. Supports ~.",
       "type": "textfield",
       "required": false,
-      "default": "~/worklog.md"
+      "default": "~/worklog/worklog.md"
     }
   ],
   "dependencies": {
     "@raycast/api": "^1.83.0",
-    "@raycast/utils": "^1.17.0"
+    "@raycast/utils": "^1.17.0",
+    "marked": "^14.1.4"
   },
   "devDependencies": {
     "@raycast/eslint-config": "^1.0.11",

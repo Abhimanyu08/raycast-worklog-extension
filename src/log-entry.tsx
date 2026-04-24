@@ -72,7 +72,8 @@ export default function Command(
         return;
       }
       const preferences = getPreferenceValues<Preferences>();
-      const filePath = preferences.worklogFile?.trim() || "~/worklog.md";
+      const filePath =
+        preferences.worklogFile?.trim() || "~/worklog/worklog.md";
       try {
         const writtenTo = await appendEntry(filePath, {
           sessionStartedAt: session.sessionStartedAt,
@@ -130,7 +131,7 @@ export default function Command(
     session.sessionEndedAt,
   );
   const preferences = getPreferenceValues<Preferences>();
-  const filePath = preferences.worklogFile?.trim() || "~/worklog.md";
+  const filePath = preferences.worklogFile?.trim() || "~/worklog/worklog.md";
 
   return (
     <Form

@@ -1,6 +1,7 @@
 import { promises as fs } from "node:fs";
 import * as path from "node:path";
 import * as os from "node:os";
+import { marked } from "marked";
 import {
   formatDateTime,
   formatDurationLong,
@@ -68,7 +69,29 @@ export async function appendEntry(
     await fs.appendFile(filePath, separator + body, "utf8");
   }
 
+  try {
+    await writeHtml(filePath);
+  } catch (err) {
+    console.warn("Failed to write worklog html:", err);
+  }
+
   return filePath;
+}
+
+export async function writeHtml(markdownPath: string): Promise<string> {
+  const markdown = await fs.readFile(markdownPath, "utf8");
+  const body = marked.parse(markdown, { async: false }) as string;
+  const html = `<!doctype html>
+<html>
+<head><meta charset="utf-8"><title>Worklog</title></head>
+<body>
+${body}
+</body>
+</html>
+`;
+  const htmlPath = path.join(path.dirname(markdownPath), "index.html");
+  await fs.writeFile(htmlPath, html, "utf8");
+  return htmlPath;
 }
 
 async function fileExists(filePath: string): Promise<boolean> {
