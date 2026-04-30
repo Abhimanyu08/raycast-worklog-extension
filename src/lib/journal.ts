@@ -5,12 +5,10 @@ import { marked } from "marked";
 import {
   formatDateTime,
   formatDurationLong,
-  renderTimelineMarkdown,
+  renderTimelineHtml,
   sumWorkMs,
 } from "./format";
 import type { Segment } from "./state";
-
-const WORKLOG_HEADER = "# Worklog\n\n";
 
 export type JournalEntry = {
   sessionStartedAt: number;
@@ -19,6 +17,13 @@ export type JournalEntry = {
   details: string;
 };
 
+export type WorklogFile = {
+  version: 1;
+  entries: JournalEntry[];
+};
+
+const EMPTY_WORKLOG: WorklogFile = { version: 1, entries: [] };
+
 export function expandHome(filePath: string): string {
   if (filePath.startsWith("~/"))
     return path.join(os.homedir(), filePath.slice(2));
@@ -26,28 +31,20 @@ export function expandHome(filePath: string): string {
   return filePath;
 }
 
-export function renderEntry(entry: JournalEntry): string {
-  const { sessionStartedAt, sessionEndedAt, segments, details } = entry;
-  const totalMs = sessionEndedAt - sessionStartedAt;
-  const activeMs = sumWorkMs(segments, sessionEndedAt);
-  const heading = `## ${formatDateTime(sessionStartedAt)} — ${formatDateTime(
-    sessionEndedAt,
-  )} (${formatDurationLong(activeMs)} active over ${formatDurationLong(totalMs)})`;
-  const timeline = renderTimelineMarkdown(segments, sessionEndedAt);
-  const trimmedDetails = details.trim();
-  return [
-    heading,
-    "",
-    "### Timeline",
-    timeline,
-    "",
-    "### Entry",
-    "",
-    trimmedDetails,
-    "",
-    "---",
-    "",
-  ].join("\n");
+export async function readJournal(jsonPath: string): Promise<WorklogFile> {
+  let raw: string;
+  try {
+    raw = await fs.readFile(jsonPath, "utf8");
+  } catch (err: unknown) {
+    if ((err as NodeJS.ErrnoException)?.code === "ENOENT") return EMPTY_WORKLOG;
+    throw err;
+  }
+  if (raw.trim().length === 0) return EMPTY_WORKLOG;
+  const parsed = JSON.parse(raw) as WorklogFile;
+  if (!parsed || !Array.isArray(parsed.entries)) {
+    throw new Error(`Worklog file at ${jsonPath} is not a valid worklog`);
+  }
+  return parsed;
 }
 
 export async function appendEntry(
@@ -55,19 +52,14 @@ export async function appendEntry(
   entry: JournalEntry,
 ): Promise<string> {
   const filePath = expandHome(rawFilePath);
-  const dir = path.dirname(filePath);
-  await fs.mkdir(dir, { recursive: true });
+  await fs.mkdir(path.dirname(filePath), { recursive: true });
 
-  const body = renderEntry(entry);
-  const exists = await fileExists(filePath);
+  const journal = await readJournal(filePath);
+  journal.entries.push(entry);
 
-  if (!exists) {
-    await fs.writeFile(filePath, WORKLOG_HEADER + body, "utf8");
-  } else {
-    const current = await fs.readFile(filePath, "utf8");
-    const separator = current.endsWith("\n") ? "" : "\n";
-    await fs.appendFile(filePath, separator + body, "utf8");
-  }
+  const tmpPath = `${filePath}.tmp`;
+  await fs.writeFile(tmpPath, JSON.stringify(journal, null, 2), "utf8");
+  await fs.rename(tmpPath, filePath);
 
   try {
     await writeHtml(filePath);
@@ -78,27 +70,41 @@ export async function appendEntry(
   return filePath;
 }
 
-export async function writeHtml(markdownPath: string): Promise<string> {
-  const markdown = await fs.readFile(markdownPath, "utf8");
-  const body = marked.parse(markdown, { async: false }) as string;
+export async function writeHtml(jsonPath: string): Promise<string> {
+  const journal = await readJournal(jsonPath);
+  const sections = [...journal.entries]
+    .reverse()
+    .map((entry) => renderEntryHtml(entry))
+    .join("\n");
   const html = `<!doctype html>
 <html>
 <head><meta charset="utf-8"><title>Worklog</title></head>
 <body>
-${body}
+<h1>Worklog</h1>
+${sections}
 </body>
 </html>
 `;
-  const htmlPath = path.join(path.dirname(markdownPath), "index.html");
+  const htmlPath = path.join(path.dirname(jsonPath), "index.html");
   await fs.writeFile(htmlPath, html, "utf8");
   return htmlPath;
 }
 
-async function fileExists(filePath: string): Promise<boolean> {
-  try {
-    await fs.access(filePath);
-    return true;
-  } catch {
-    return false;
-  }
+function renderEntryHtml(entry: JournalEntry): string {
+  const { sessionStartedAt, sessionEndedAt, segments, details } = entry;
+  const totalMs = sessionEndedAt - sessionStartedAt;
+  const activeMs = sumWorkMs(segments, sessionEndedAt);
+  const heading = `${formatDateTime(sessionStartedAt)} — ${formatDateTime(
+    sessionEndedAt,
+  )} (${formatDurationLong(activeMs)} active over ${formatDurationLong(totalMs)})`;
+  const timeline = renderTimelineHtml(segments, sessionEndedAt);
+  const body = marked.parse(details.trim(), { async: false }) as string;
+  return `<section>
+<h2>${heading}</h2>
+<h3>Timeline</h3>
+${timeline}
+<h3>Entry</h3>
+${body}
+</section>
+<hr>`;
 }

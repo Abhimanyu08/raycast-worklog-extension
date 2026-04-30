@@ -3,28 +3,28 @@ import { promises as fs } from "node:fs";
 import { expandHome, writeHtml } from "./lib/journal";
 
 type Preferences = {
-  worklogFile: string;
+  worklogPath: string;
 };
 
 export default async function Command() {
   const preferences = getPreferenceValues<Preferences>();
-  const markdownPath = expandHome(
-    preferences.worklogFile?.trim() || "~/worklog/worklog.md",
+  const jsonPath = expandHome(
+    preferences.worklogPath?.trim() || "~/worklog/worklog.json",
   );
 
   try {
-    await fs.access(markdownPath);
+    await fs.access(jsonPath);
   } catch {
     await showToast({
       style: Toast.Style.Failure,
       title: "No worklog yet",
-      message: `Log an entry first — ${markdownPath} doesn't exist`,
+      message: `Log an entry first — ${jsonPath} doesn't exist`,
     });
     return;
   }
 
   try {
-    const htmlPath = await writeHtml(markdownPath);
+    const htmlPath = await writeHtml(jsonPath);
     await open(htmlPath);
   } catch (err) {
     const message =

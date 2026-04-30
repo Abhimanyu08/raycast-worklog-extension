@@ -2,7 +2,7 @@
   "$schema": "https://www.raycast.com/schemas/extension.json",
   "name": "worklog-timer",
   "title": "Worklog Timer",
-  "description": "Start, pause, and stop a session timer. On stop, write a journal entry appended to a markdown worklog file.",
+  "description": "Start, pause, and stop a session timer. On stop, append a journal entry to a JSON worklog file and render it as HTML.",
   "icon": "icon.png",
   "author": "abhimanyu",
   "license": "MIT",
@@ -54,12 +54,12 @@
   ],
   "preferences": [
     {
-      "name": "worklogFile",
+      "name": "worklogPath",
       "title": "Worklog File",
-      "description": "Path to the markdown file where entries are appended. Supports ~.",
+      "description": "Path to the JSON file where entries are stored. Supports ~.",
       "type": "textfield",
       "required": false,
-      "default": "~/worklog/worklog.md"
+      "default": "~/worklog/worklog.json"
     }
   ],
   "dependencies": {

@@ -26,7 +26,7 @@ type LaunchContext = {
 };
 
 type Preferences = {
-  worklogFile: string;
+  worklogPath: string;
 };
 
 type FormValues = {
@@ -73,7 +73,7 @@ export default function Command(
       }
       const preferences = getPreferenceValues<Preferences>();
       const filePath =
-        preferences.worklogFile?.trim() || "~/worklog/worklog.md";
+        preferences.worklogPath?.trim() || "~/worklog/worklog.json";
       try {
         const writtenTo = await appendEntry(filePath, {
           sessionStartedAt: session.sessionStartedAt,
@@ -131,7 +131,7 @@ export default function Command(
     session.sessionEndedAt,
   );
   const preferences = getPreferenceValues<Preferences>();
-  const filePath = preferences.worklogFile?.trim() || "~/worklog/worklog.md";
+  const filePath = preferences.worklogPath?.trim() || "~/worklog/worklog.json";
 
   return (
     <Form

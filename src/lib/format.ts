@@ -42,17 +42,18 @@ function pad2(n: number): string {
   return n.toString().padStart(2, "0");
 }
 
-export function renderTimelineMarkdown(
+export function renderTimelineHtml(
   segments: Segment[],
   sessionEndedAt: number,
 ): string {
-  return segments
+  const items = segments
     .map((s) => {
       const end = s.endedAt ?? sessionEndedAt;
       const duration = formatDurationLong(end - s.startedAt);
-      return `- ${formatTime(s.startedAt)} – ${formatTime(end)} · ${s.type} (${duration})`;
+      return `  <li>${formatTime(s.startedAt)} – ${formatTime(end)} · ${s.type} (${duration})</li>`;
     })
     .join("\n");
+  return `<ul>\n${items}\n</ul>`;
 }
 
 export function renderTimelinePlain(
