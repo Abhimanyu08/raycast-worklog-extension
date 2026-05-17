@@ -1,18 +1,11 @@
-import { launchCommand, LaunchType, showToast, Toast } from "@raycast/api";
+import { showToast, Toast } from "@raycast/api";
+import { launchLogEntry } from "./lib/launch";
 import { stopTimer, TimerStateError } from "./lib/state";
 
 export default async function Command() {
   try {
     const session = await stopTimer();
-    await launchCommand({
-      name: "log-entry",
-      type: LaunchType.UserInitiated,
-      context: {
-        sessionStartedAt: session.sessionStartedAt,
-        sessionEndedAt: session.sessionEndedAt,
-        segments: session.segments,
-      },
-    });
+    await launchLogEntry(session);
   } catch (err) {
     const message =
       err instanceof TimerStateError ? err.message : "Could not stop timer";

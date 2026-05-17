@@ -1,18 +1,13 @@
-import {
-  Icon,
-  launchCommand,
-  LaunchType,
-  MenuBarExtra,
-  showToast,
-  Toast,
-} from "@raycast/api";
+import { Icon, MenuBarExtra, showToast, Toast } from "@raycast/api";
 import { useEffect, useState } from "react";
 import { formatClock } from "./lib/format";
+import { launchLogEntry } from "./lib/launch";
 import {
   activeMsSoFar,
   getState,
   pauseTimer,
   resumeTimer,
+  StalePausedSessionError,
   startTimer,
   stopTimer,
   TimerState,
@@ -52,6 +47,17 @@ export default function Command() {
       await action();
       setState(await getState());
     } catch (err) {
+      if (err instanceof StalePausedSessionError) {
+        // Start/Resume hit a session abandoned while paused. State is already
+        // finalized; reflect that and send the old session to the log form.
+        setState(await getState());
+        await showToast({
+          style: Toast.Style.Failure,
+          title: "Previous session was abandoned — log it first",
+        });
+        await launchLogEntry(err.session);
+        return;
+      }
       const message =
         err instanceof TimerStateError ? err.message : errorFallback;
       await showToast({ style: Toast.Style.Failure, title: message });
@@ -61,15 +67,7 @@ export default function Command() {
   async function handleStop() {
     try {
       const session = await stopTimer();
-      await launchCommand({
-        name: "log-entry",
-        type: LaunchType.UserInitiated,
-        context: {
-          sessionStartedAt: session.sessionStartedAt,
-          sessionEndedAt: session.sessionEndedAt,
-          segments: session.segments,
-        },
-      });
+      await launchLogEntry(session);
     } catch (err) {
       const message =
         err instanceof TimerStateError ? err.message : "Could not stop timer";
